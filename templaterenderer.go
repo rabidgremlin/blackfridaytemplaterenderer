@@ -9,26 +9,54 @@ import (
 )
 
 type RendererTemplates struct {
-	ParagraphStart *tt.Template
-	ParagraphEnd   *tt.Template
-	Emphasis       *tt.Template
-	NormalText     *tt.Template
-	Entity         *tt.Template
+	BlockCode       *tt.Template
+	TitleBlock      *tt.Template
+	BlockQuote      *tt.Template
+	BlockHtml       *tt.Template
+	Header          *tt.Template
+	HRule           *tt.Template
+	List            *tt.Template
+	ListItem        *tt.Template
+	ParagraphStart  *tt.Template
+	ParagraphEnd    *tt.Template
+	Table           *tt.Template
+	TableRow        *tt.Template
+	TableHeaderCell *tt.Template
+	TableCell       *tt.Template
+	FootnotesStart  *tt.Template
+	FootnotesEnd    *tt.Template
+	FootnoteItem    *tt.Template
+	AutoLink        *tt.Template
+	CodeSpan        *tt.Template
+	DoubleEmphasis  *tt.Template
+	Emphasis        *tt.Template
+	Image           *tt.Template
+	LineBreak       *tt.Template
+	Link            *tt.Template
+	RawHtmlTag      *tt.Template
+	TripleEmphasis  *tt.Template
+	StrikeThrough   *tt.Template
+	FootnoteRef     *tt.Template
+	Entity          *tt.Template
+	NormalText      *tt.Template
+	DocumentHeader  *tt.Template
+	DocumentFooter  *tt.Template
 }
 
 // Templated is a type that implements the Renderer interface for Templated output.
 //
 // Do not create this directly, instead use the TemplatedRenderer function.
 type Templated struct {
+	flags             int
 	rendererTemplates RendererTemplates
 }
 
 func TemplatedRenderer(flags int, rendererTemplates RendererTemplates) blackfriday.Renderer {
-	return &Templated{rendererTemplates: rendererTemplates}
+	return &Templated{flags: flags, rendererTemplates: rendererTemplates}
 }
 
 func (options *Templated) GetFlags() int {
-	return 0
+	return options.flags
 }
 
 // render code chunks using verbatim, or listings if we have a language
@@ -53,7 +81,9 @@ func (options *Templated) Header(out *bytes.Buffer, text func() bool, level int,
 }
 
 func (options *Templated) HRule(out *bytes.Buffer) {
-
+	if options.rendererTemplates.HRule != nil {
+		options.rendererTemplates.HRule.Execute(out, nil)
+	}
 }
 
 func (options *Templated) List(out *bytes.Buffer, text func() bool, flags int) {
@@ -66,13 +96,16 @@ func (options *Templated) ListItem(out *bytes.Buffer, text []byte, flags int) {
 
 func (options *Templated) Paragraph(out *bytes.Buffer, text func() bool) {
 	marker := out.Len()
-	//out.WriteString( rendererTemplates.ParagraphStart.tmpl.Execute()
-	options.rendererTemplates.ParagraphStart.Execute(out, nil)
+	if options.rendererTemplates.ParagraphStart != nil {
+		options.rendererTemplates.ParagraphStart.Execute(out, nil)
+	}
 	if !text() {
 		out.Truncate(marker)
 		return
 	}
-	options.rendererTemplates.ParagraphEnd.Execute(out, nil)
+	if options.rendererTemplates.ParagraphEnd != nil {
+		options.rendererTemplates.ParagraphEnd.Execute(out, nil)
+	}
 }
 
 func (options *Templated) Table(out *bytes.Buffer, header []byte, body []byte, columnData []int) {
@@ -129,7 +162,9 @@ func (options *Templated) Image(out *bytes.Buffer, link []byte, title []byte, al
 }
 
 func (options *Templated) LineBreak(out *bytes.Buffer) {
-
+	if options.rendererTemplates.LineBreak != nil {
+		options.rendererTemplates.LineBreak.Execute(out, nil)
+	}
 }
 
 func (options *Templated) Link(out *bytes.Buffer, link []byte, title []byte, content []byte) {
@@ -172,9 +207,13 @@ func (options *Templated) NormalText(out *bytes.Buffer, text []byte) {
 
 // header and footer
 func (options *Templated) DocumentHeader(out *bytes.Buffer) {
-
+	if options.rendererTemplates.DocumentHeader != nil {
+		options.rendererTemplates.DocumentHeader.Execute(out, nil)
+	}
 }
 
 func (options *Templated) DocumentFooter(out *bytes.Buffer) {
-
+	if options.rendererTemplates.DocumentFooter != nil {
+		options.rendererTemplates.DocumentFooter.Execute(out, nil)
+	}
 }
